@@ -1,4 +1,4 @@
-name: Rust
+name: Rust Build and Publish
 
 on:
   workflow_dispatch:
@@ -10,6 +10,9 @@ jobs:
   linux-musl-aarch64:
     name: Linux musl Aarch64
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -39,3 +42,21 @@ jobs:
             rstun-linux-aarch64-musl.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # New steps for publishing to GitHub Packages
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Create package.json
+        run: |
+          echo '{
+            "name": "@${{ github.repository_owner }}/rstun",
+            "version": "${{ github.ref_name }}",
+            "files": ["rstun-linux-aarch64-musl.tar.gz"]
+          }' > package.json
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
