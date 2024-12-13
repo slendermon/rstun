@@ -42,21 +42,14 @@ jobs:
             rstun-linux-aarch64-musl.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       # New steps for publishing to GitHub Packages
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          registry-url: 'https://npm.pkg.github.com'
-      - name: Create package.json
-        run: |
-          echo '{
-            "name": "@${{ github.repository_owner }}/rstun",
-            "version": "1.0.0",
-            "files": ["rstun-linux-aarch64-musl.tar.gz"]
-          }' > package.json
-      - name: Publish to GitHub Packages
-        run: npm publish
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./path/to/your/file.zip
+          asset_name: your-file-name.zip
+          asset_content_type: application/zip
