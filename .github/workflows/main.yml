@@ -3,9 +3,6 @@ name: Rust
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'src/**'
-      - '.github/workflows/main.yml'
     tags:
       - 'release/*'
 
@@ -20,17 +17,25 @@ jobs:
           toolchain: stable
           target: aarch64-unknown-linux-musl
           override: true
-      - run: rustup target add aarch64-unknown-linux-musl && cargo install cross --git https://github.com/cross-rs/cross
-                                                         && cross build --all-features --release --target aarch64-unknown-linux-musl
-                                                         && mkdir -p rstun-linux-aarch64-musl
-                                                         && mv target/aarch64-unknown-linux-musl/release/rstunc ./rstun-linux-aarch64-musl/
-                                                         && mv target/aarch64-unknown-linux-musl/release/rstund ./rstun-linux-aarch64-musl/
-                                                         && tar zcf rstun-linux-aarch64-musl.tar.gz ./rstun-linux-aarch64-musl/*
+      - name: Build and package
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          cargo install cross --git https://github.com/cross-rs/cross
+          cross build --all-features --release --target aarch64-unknown-linux-musl
+          mkdir -p rstun-linux-aarch64-musl
+          mv target/aarch64-unknown-linux-musl/release/rstunc ./rstun-linux-aarch64-musl/
+          mv target/aarch64-unknown-linux-musl/release/rstund ./rstun-linux-aarch64-musl/
+          tar zcf rstun-linux-aarch64-musl.tar.gz ./rstun-linux-aarch64-musl/*
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rstun-linux-aarch64-musl
+          path: rstun-linux-aarch64-musl.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            rstun-linux-aarch640musl.tar.gz
+            rstun-linux-aarch64-musl.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
